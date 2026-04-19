@@ -47,7 +47,7 @@ export default function LandingPage() {
       {authMode && (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-blue-900/20 backdrop-blur-md">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100 overflow-hidden relative">
-            <button 
+            <button
               onClick={() => setAuthMode(null)}
               className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition"
             >
@@ -59,7 +59,7 @@ export default function LandingPage() {
                 {authMode === 'login' ? 'Selamat Datang Kembali' : 'Buat Akun Baru'}
               </h2>
               <p className="text-sm text-gray-600 mb-8">
-                {authMode === 'login' 
+                {authMode === 'login'
                   ? 'Masuk untuk mengakses riwayat kesehatan tulang belakang Anda.' 
                   : 'Daftar untuk mulai memantau postur tubuh dengan AI.'}
               </p>
@@ -70,8 +70,8 @@ export default function LandingPage() {
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Lengkap</label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         required
                         placeholder="Masukkan nama lengkap"
                         className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-900 focus:border-transparent outline-none transition"
@@ -85,8 +85,8 @@ export default function LandingPage() {
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       required
                       placeholder="nama@email.com"
                       className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-900 focus:border-transparent outline-none transition"
@@ -99,8 +99,8 @@ export default function LandingPage() {
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                    <input 
-                      type="password" 
+                    <input
+                      type="password"
                       required
                       placeholder="••••••••"
                       className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-900 focus:border-transparent outline-none transition"
@@ -109,7 +109,7 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <button 
+                <button
                   disabled={loading}
                   className="w-full py-3 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl transition flex items-center justify-center gap-2"
                 >
@@ -118,7 +118,7 @@ export default function LandingPage() {
               </form>
 
               <div className="mt-6 text-center space-y-4">
-                <button 
+                <button
                   onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
                   className="text-sm text-gray-600 hover:text-blue-900 transition"
                 >
@@ -141,7 +141,7 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="text-2xl font-bold text-blue-900">Postura.ai</div>
-          
+
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
             <a href="#causes" className="text-sm text-gray-600 hover:text-gray-900 transition">Tentang</a>

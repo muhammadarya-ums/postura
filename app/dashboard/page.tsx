@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react" // Tambah useRef
+import { supabase } from "../lib/supabaseClient"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { MobileNav } from "@/components/dashboard/mobile-nav"
 import { SensorCard } from "@/components/dashboard/sensor-card"
@@ -12,38 +13,13 @@ import { cn } from "@/app/lib/utils"
 import { usePostureAI } from "@/hooks/usePostureAI";
 import { Activity, Bluetooth, BluetoothConnected, Info } from "lucide-react"
 
-// Mapping Edukasi berdasarkan hasil prediksi AI
+// ... (EDUKASI_DATA dan SensorState tetap sama) ...
 const EDUKASI_DATA: Record<string, any> = {
-  "Tegak": {
-    kategori: "Normal",
-    exercise_website: ["peregangan-ringan", "yoga"],
-    farmakologis: "Tidak memerlukan obat-obatan.",
-    posisi_tubuh: "Pertahankan posisi telinga sejajar dengan bahu."
-  },
-  "Kifosis": {
-    kategori: "Perhatian",
-    exercise_website: ["chest-stretch", "wall-angels"],
-    farmakologis: "Jika nyeri, kompres hangat pada punggung atas.",
-    posisi_tubuh: "Busungkan dada dan tarik belikat ke arah belakang."
-  },
-  "Text Neck": {
-    kategori: "Peringatan",
-    exercise_website: ["chin-tucks", "neck-rotation"],
-    farmakologis: "Istirahatkan leher setiap 20 menit dari gadget.",
-    posisi_tubuh: "Angkat layar gadget hingga sejajar dengan mata."
-  },
-  "Lordosis": {
-    kategori: "Perhatian",
-    exercise_website: ["pelvic-tilt", "plank"],
-    farmakologis: "Fokus pada penguatan otot inti (core).",
-    posisi_tubuh: "Hindari berdiri terlalu lama dengan punggung melengkung."
-  },
-  "Slouching": {
-    kategori: "Peringatan",
-    exercise_website: ["shoulder-rolls", "back-extension"],
-    farmakologis: "Lakukan mobilisasi tulang belakang secara rutin.",
-    posisi_tubuh: "Duduk tegak dengan dukungan pada punggung bawah."
-  }
+  "Tegak": { kategori: "Normal", exercise_website: ["peregangan-ringan", "yoga"], farmakologis: "Tidak memerlukan obat-obatan.", posisi_tubuh: "Pertahankan posisi telinga sejajar dengan bahu." },
+  "Kifosis": { kategori: "Perhatian", exercise_website: ["chest-stretch", "wall-angels"], farmakologis: "Jika nyeri, kompres hangat pada punggung atas.", posisi_tubuh: "Busungkan dada dan tarik belikat ke arah belakang." },
+  "Text Neck": { kategori: "Peringatan", exercise_website: ["chin-tucks", "neck-rotation"], farmakologis: "Istirahatkan leher setiap 20 menit dari gadget.", posisi_tubuh: "Angkat layar gadget hingga sejajar dengan mata." },
+  "Lordosis": { kategori: "Perhatian", exercise_website: ["pelvic-tilt", "plank"], farmakologis: "Fokus pada penguatan otot inti (core).", posisi_tubuh: "Hindari berdiri terlalu lama dengan punggung melengkung." },
+  "Slouching": { kategori: "Peringatan", exercise_website: ["shoulder-rolls", "back-extension"], farmakologis: "Lakukan mobilisasi tulang belakang secara rutin.", posisi_tubuh: "Duduk tegak dengan dukungan pada punggung bawah." }
 };
 
 interface SensorState {
@@ -64,6 +40,7 @@ interface SensorState {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("dashboard")
   const { prediction, predictPosture } = usePostureAI(); 
+  const lastSavedTime = useRef<number>(0); // Untuk Throttling
   
   const [sensorData, setSensorData] = useState<SensorState>({
     cervical: 0,
@@ -74,7 +51,24 @@ export default function DashboardPage() {
     confidence: 0
   })
 
-  // Logika Bluetooth (Tetap gunakan fungsi asli kamu)
+  // 1. REALTIME SUBSCRIPTION (Mendengar perubahan dari Database)
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'riwayat_postur' },
+        (payload) => {
+          console.log('Data baru masuk ke DB:', payload.new);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const connectBLE = async () => {
     const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
     const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
@@ -108,23 +102,42 @@ export default function DashboardPage() {
     }
   };
 
-  // Logic AI Lokal (Pengganti Axios)
+  // 2. LOGIC AI & AUTO-SAVE KE SUPABASE
   useEffect(() => {
     if (sensorData.status !== "CONNECTED") return;
 
-    // 1. Jalankan prediksi dari data sensor terbaru
+    // Jalankan prediksi
     predictPosture(sensorData.cervical, sensorData.thoracic, sensorData.lumbar);
-    
-    // 2. Ambil data edukasi yang cocok dengan hasil prediksi
     const infoEdukasi = EDUKASI_DATA[prediction];
 
-    // 3. Update state untuk tampilan
     setSensorData(prev => ({
       ...prev,
       diagnosis: prediction,
       edukasi: infoEdukasi || prev.edukasi
     }));
 
+    // --- LOGIKA AUTO-SAVE KE DATABASE ---
+    const now = Date.now();
+    // Simpan hanya jika sudah lewat 10 detik dari penyimpanan terakhir
+    if (now - lastSavedTime.current > 10000 && prediction !== "Waiting...") {
+      const saveLog = async () => {
+        const { error } = await supabase
+          .from('riwayat_postur')
+          .insert([{
+            angle_cervical: sensorData.cervical,
+            angle_thoracic: sensorData.thoracic,
+            angle_lumbar: sensorData.lumbar,
+            hasil_diagnosa: prediction,
+            saran_latihan: infoEdukasi?.exercise_website?.[0] || "General Stretch"
+          }]);
+        
+        if (!error) {
+          lastSavedTime.current = now;
+          console.log("Riwayat berhasil disimpan!");
+        }
+      };
+      saveLog();
+    }
   }, [sensorData.cervical, sensorData.thoracic, sensorData.lumbar, prediction, sensorData.status]);
 
   return (
@@ -158,7 +171,7 @@ export default function DashboardPage() {
   )
 }
 
-// Sub-komponen DashboardContent tetap menggunakan props yang sama
+// ... (Sub-komponen DashboardContent tetap sama seperti milikmu) ...
 function DashboardContent({ data }: { data: SensorState }) {
   return (
     <div className="space-y-6">
