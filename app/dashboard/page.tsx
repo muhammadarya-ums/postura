@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react" // Tambah useRef
+import { useState, useEffect, useRef } from "react"
 import { supabase } from "../lib/supabaseClient"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { MobileNav } from "@/components/dashboard/mobile-nav"
@@ -9,6 +9,7 @@ import { AnalyticsChart } from "@/components/dashboard/analytics-chart"
 import { ExerciseCenter } from "@/components/dashboard/exercise-center"
 import { NotificationLog } from "@/components/dashboard/notification-log"
 import { HistoryView } from "@/components/dashboard/history-view"
+import { ProfileView } from "@/components/dashboard/profile-view"
 import { cn } from "@/app/lib/utils"
 import { usePostureAI } from "@/hooks/usePostureAI";
 import { Activity, Bluetooth, BluetoothConnected, Info } from "lucide-react"
@@ -39,8 +40,9 @@ interface SensorState {
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("dashboard")
+  const [user, setUser] = useState<any>(null) // Tambahkan state user
   const { prediction, predictPosture } = usePostureAI(); 
-  const lastSavedTime = useRef<number>(0); // Untuk Throttling
+  const lastSavedTime = useRef<number>(0);
   
   const [sensorData, setSensorData] = useState<SensorState>({
     cervical: 0,
@@ -50,7 +52,24 @@ export default function DashboardPage() {
     diagnosis: "Waiting...",
     confidence: 0
   })
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    fetchUser()
+  }, [])
 
+  // 2. FUNGSI LOGOUT (Dikirim ke ProfileView)
+  const handleLogout = async () => {
+  try {
+    await supabase.auth.signOut();
+    // Pake window.location biar state bener-bener bersih total
+    window.location.href = "/";
+  } catch (err) {
+    console.error("Gagal logout:", err);
+  }
+};
   // 1. REALTIME SUBSCRIPTION (Mendengar perubahan dari Database)
   useEffect(() => {
     const channel = supabase
@@ -165,6 +184,9 @@ export default function DashboardPage() {
           {activeTab === "history" && <HistoryView />}
           {activeTab === "exercises" && <ExerciseCenter />}
           {activeTab === "notifications" && <NotificationLog />}
+          {activeTab === "profile" && (
+  <ProfileView user={user} onLogout={handleLogout} />
+)}
         </div>
       </main>
     </div>

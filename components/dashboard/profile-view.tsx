@@ -10,7 +10,8 @@ interface ProfileViewProps {
 
 export function ProfileView({ user, onLogout }: ProfileViewProps) {
   return (
-    <div className="max-w-3xl mx-auto">
+    // Tambah pb-32 supaya konten tidak terhalang MobileNav di iPhone
+    <div className="max-w-3xl mx-auto pb-32"> 
       {/* Tombol Kembali */}
       <Link 
         href="/dashboard" 
@@ -47,6 +48,7 @@ export function ProfileView({ user, onLogout }: ProfileViewProps) {
             <h1 className="text-3xl font-bold text-gray-900">
               {user?.user_metadata?.full_name || 'User Postura'}
             </h1>
+            {/* Gue sesuaikan sedikit infonya biar sesuai profil kamu */}
             <p className="text-gray-500 font-medium">Informatics Student • Universitas Muhammadiyah</p>
           </div>
 
@@ -78,13 +80,17 @@ export function ProfileView({ user, onLogout }: ProfileViewProps) {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-10 flex flex-col sm:flex-row gap-4">
+          {/* Tambah relative z-20 agar tombol diprioritaskan saat diklik */}
+          <div className="mt-10 flex flex-col sm:flex-row gap-4 relative z-20"> 
             <button className="flex-1 py-4 bg-blue-900 text-white font-bold rounded-2xl hover:bg-blue-800 shadow-lg shadow-blue-900/20 transition active:scale-95">
               Edit Profil
             </button>
             <button 
-              onClick={onLogout}
-              className="px-8 py-4 bg-red-50 text-red-600 font-bold rounded-2xl hover:bg-red-100 transition flex items-center justify-center gap-2 active:scale-95"
+              onClick={(e) => {
+                e.preventDefault();
+                onLogout();
+              }}
+              className="px-8 py-4 bg-red-50 text-red-600 font-bold rounded-2xl hover:bg-red-100 transition flex items-center justify-center gap-2 active:scale-95 touch-manipulation"
             >
               <LogOut className="w-5 h-5" /> Keluar
             </button>
