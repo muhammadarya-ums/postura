@@ -142,7 +142,6 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       {/* User Profile Card (Hanya jika login) */}
       {user && (
         <div
-          href="/dashboard/profile"
           onClick={() => setActiveTab('profile')}
           className={cn(
             "p-4 mx-4 mb-4 rounded-2xl border transition-all duration-200 group",

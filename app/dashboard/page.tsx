@@ -95,7 +95,7 @@ export default function DashboardPage() {
     try {
       setSensorData(prev => ({ ...prev, status: "PAIRING..." }));
       const device = await (navigator as any).bluetooth.requestDevice({
-        filters: [{ name: "POSTURA_IMAN_LEVELING" }],
+        filters: [{ name: "POSTURA" }],
         optionalServices: [SERVICE_UUID]
       });
 
