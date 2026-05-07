@@ -22,9 +22,9 @@ interface SidebarProps {
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { id: "history", label: "History", icon: History, href: "/dashboard/history" },
-  { id: "exercises", label: "Exercises", icon: Dumbbell, href: "/dashboard/exercises" },
-  { id: "notifications", label: "Notifications", icon: Bell, href: "/dashboard/notifications" },
+  { id: "history", label: "History", icon: History, href: "/components/dashboard/history-view.tsx" },
+  { id: "exercises", label: "Exercises", icon: Dumbbell, href: "/components/dashboard/exercise-center.tsx" },
+  { id: "notifications", label: "Notifications", icon: Bell, href: "/components/dashboard/notification-log.tsx" },
 ]
 
 export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
